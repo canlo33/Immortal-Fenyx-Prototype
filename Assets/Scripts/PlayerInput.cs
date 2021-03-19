@@ -9,16 +9,16 @@ public class PlayerInput : MonoBehaviour
     public float HorizontalMoveRaw { get; private set; }
     public float VerticalMoveRaw { get; private set; }
     public bool DashInput { get; private set; }
-    public Vector3 DashForce { get; private set; }
-
-
+    public bool JumpInput { get; private set; }
+    public bool AttackInput { get; private set; }
     private void Update()
     {
         HorizontalMove = Input.GetAxis("Horizontal");
         HorizontalMoveRaw = Input.GetAxisRaw("Horizontal");
         VerticalMove = Input.GetAxis("Vertical");
         VerticalMoveRaw = Input.GetAxisRaw("Vertical");
-        DashForce = new Vector3(HorizontalMoveRaw, 0f, VerticalMoveRaw).normalized;
+        JumpInput = Input.GetKeyDown(KeyCode.Space);
         DashInput = Input.GetKeyDown(KeyCode.LeftShift);
+        AttackInput = Input.GetMouseButtonDown(0);
     }
 }
