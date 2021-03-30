@@ -6,6 +6,9 @@ public class AnimationEventController : MonoBehaviour
 {
     private Animator anim;
     private PlayerController playerController;
+    public TimeEffect attackEffect1;
+    public TimeEffect attackEffect2;
+    public TimeEffect attackEffect3;
     void Start()
     {
         anim = GetComponent<Animator>();
@@ -24,8 +27,22 @@ public class AnimationEventController : MonoBehaviour
         playerController.comboTimerOn = false;
         playerController.comboCount = 0;
         playerController.canMove = true;
-        anim.SetInteger("comboCount", 0);
-        
-        
+        playerController.isMeleeAttacking = false;
+        anim.SetInteger("comboCount", 0);       
+    }
+    void ActivateMeleeComboEffect(int comboCount)
+    {
+        switch (comboCount)
+        {
+            case 1:
+                attackEffect1.Activate();
+                break;
+            case 2:
+                attackEffect2.Activate();
+                break;
+            case 3:
+                attackEffect3.Activate();
+                break;
+        }
     }
 }

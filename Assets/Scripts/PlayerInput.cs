@@ -10,7 +10,8 @@ public class PlayerInput : MonoBehaviour
     public float VerticalMoveRaw { get; private set; }
     public bool DashInput { get; private set; }
     public bool JumpInput { get; private set; }
-    public bool AttackInput { get; private set; }
+    public bool MeleeAttackInput { get; private set; }
+    public bool ArrowAttackInput { get; private set; }
     private void Update()
     {
         HorizontalMove = Input.GetAxis("Horizontal");
@@ -19,6 +20,7 @@ public class PlayerInput : MonoBehaviour
         VerticalMoveRaw = Input.GetAxisRaw("Vertical");
         JumpInput = Input.GetKeyDown(KeyCode.Space);
         DashInput = Input.GetKeyDown(KeyCode.LeftShift);
-        AttackInput = Input.GetMouseButtonDown(0);
+        MeleeAttackInput = Input.GetMouseButtonDown(0);
+        ArrowAttackInput = Input.GetMouseButtonDown(1);
     }
 }

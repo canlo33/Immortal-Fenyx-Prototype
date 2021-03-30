@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Cinemachine;
 using UnityEngine.Rendering;
 
 [RequireComponent(typeof(PlayerInput))]
@@ -41,6 +42,17 @@ public class PlayerController : MonoBehaviour
     //Melee Attack Related Variables
     public bool comboTimerOn;
     public int comboCount;
+    public float meleeForwardForce;
+    public bool isMeleeAttacking;
+
+    //Arrow Attack Related Variables
+    public bool isShootingArrow;
+    public float arrowSpeed;
+    public CinemachineVirtualCamera arrowCamera;
+    public CinemachineFreeLook playerCamera;
+    public Transform arrow;
+    public Transform arrowShootPoint;
+    private Rigidbody arrowRB;
 
     void Awake()
     {
@@ -49,6 +61,9 @@ public class PlayerController : MonoBehaviour
         playerInput = GetComponent<PlayerInput>();
         camera = Camera.main.transform;
         defaultGravity = Physics.gravity.y;
+        arrowRB = arrow.GetComponentInChildren<Rigidbody>();
+        arrow.gameObject.SetActive(false);
+        arrowCamera.gameObject.SetActive(false);
     }
     // Update is called once per frame
     void Update()
@@ -57,6 +72,7 @@ public class PlayerController : MonoBehaviour
         HandleDash();
         Jump();
         MeleeAttack();
+        HandleArrowShoot();
     }
     private void FixedUpdate()
     {
@@ -153,21 +169,83 @@ public class PlayerController : MonoBehaviour
     }
     void MeleeAttack()
     {
-        if (playerInput.AttackInput)
+        if (playerInput.MeleeAttackInput)
         {
-            if(comboCount > 0)
+            rb.velocity = Vector3.zero;
+            // Check if the player is already in combo or not
+            if (comboCount > 0)
             {
                 comboTimerOn = true;
+                isMeleeAttacking = true;
+                canMove = false;
             }
+            // The player is attacking for the first time.
             else
             {
                 canMove = false;
-                rb.velocity = Vector3.zero;
                 anim.SetTrigger("meleeAttack");
                 comboCount++;
-            }
+                isMeleeAttacking = true;
+            }          
         }
     }
+    void HandleArrowShoot()
+    {
+        //Check return conditions.
+        if (isDashing || isJumping || isMeleeAttacking)
+            return;
+
+        //Check if the player is shooting the arrow for time.
+        if(playerInput.ArrowAttackInput && !isShootingArrow)
+        {
+            StartCoroutine(OnShootArrow());
+        }
+
+        //Check if the player has already shot an arrow.
+        else if(isShootingArrow)
+        {
+            OnArrowFlying();
+        }
+    }
+    IEnumerator OnShootArrow()
+    {
+        // Play the animation.
+        anim.SetBool("shootArrow", true);
+        canMove = false;
+        rb.velocity = new Vector3(0f, 0f, 0f);
+
+        //Once the animation is done, set shoot the arrow and switch from player camera to Arrow camera.
+        //Block player movement and slowdown the time.
+        yield return new WaitForSeconds(1f);
+        isShootingArrow = true;
+        arrow.gameObject.SetActive(true);
+        arrow.position = arrowShootPoint.position;
+        arrow.rotation = arrowShootPoint.rotation;
+        playerCamera.gameObject.SetActive(false);
+        arrowCamera.gameObject.SetActive(true);
+        Time.timeScale = 0.5f;
+        Time.fixedDeltaTime = Time.timeScale * 0.02f;
+    }
+    void OnArrowFlying()
+    {
+        // Move the arrow forward and rotate it based on player input.
+        Vector3 direction = new Vector3(playerInput.VerticalMove, playerInput.HorizontalMove, 0f) * Time.deltaTime;
+        arrow.Rotate(direction, 0.3f, Space.World);
+        arrowRB.velocity = arrow.forward * 4f;        
+    }
+    public void OnArrowLanded()
+    {
+        isShootingArrow = false;
+        anim.SetBool("shootArrow", false);
+        canMove = true;
+        playerCamera.gameObject.SetActive(true);
+        arrowCamera.gameObject.SetActive(false);
+        arrowRB.velocity = Vector3.zero;
+        arrow.gameObject.SetActive(false);
+        Time.timeScale = 1f;
+        Time.fixedDeltaTime = Time.timeScale * 0.02f;
+    }
+    //Check if the player is colliding with anyhting.
     private void OnCollisionEnter(Collision collision)
     {
         // If player is touching the ground, set isJumping parameter to false
